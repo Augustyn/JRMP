@@ -31,5 +31,5 @@ public enum Colour {
 	public String toString(){
 		return text;
 	}
-};  
+}
 

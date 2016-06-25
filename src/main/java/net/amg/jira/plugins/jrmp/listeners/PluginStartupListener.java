@@ -35,11 +35,9 @@ import com.atlassian.jira.issue.fields.screen.FieldScreenTab;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.plugin.PluginException;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
+import lombok.extern.slf4j.Slf4j;
 import net.amg.jira.plugins.jrmp.services.model.RiskIssues;
 import org.ofbiz.core.entity.GenericEntityException;
-import org.ofbiz.core.entity.GenericValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -52,8 +50,8 @@ import java.util.Map;
  * @author Adam Król
  */
 @Component
+@Slf4j
 public class PluginStartupListener implements LifecycleAware  {
-    private Logger logger = LoggerFactory.getLogger(getClass());
     //Constants:
     private static final String CUSTOMFIELDTYPES_FLOAT = "com.atlassian.jira.plugin.system.customfieldtypes:select";
     private static final String CUSTOMFIELDTYPES_EXACTNUMBER = "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher";
@@ -61,6 +59,7 @@ public class PluginStartupListener implements LifecycleAware  {
     public static final String RISK_ISSUE_TYPE = "Risk";
     public static final String RISK_CONSEQUENCE_TEXT_CF = "Risk Consequence";
     public static final String RISK_PROBABILITY_TEXT_CF = "Risk Probability";
+
     //Dummy constructor required for Spring dependency injection.
     public PluginStartupListener() {};
     @Autowired private ConstantsManager constantsManager;
@@ -69,7 +68,7 @@ public class PluginStartupListener implements LifecycleAware  {
     @Autowired private IssueTypeSchemeManager issueTypeSchemeManager;
     @Autowired private OptionsManager optionsManager;
 
-    public void addOptionToCustomField(CustomField customField, String value) {
+    private void addOptionToCustomField(CustomField customField, String value) {
         if (customField != null) {
             List<FieldConfigScheme> schemes = customField
                     .getConfigurationSchemes();
@@ -86,20 +85,20 @@ public class PluginStartupListener implements LifecycleAware  {
 
     @Override
     public void onStart() {
-        logger.info("Starting JIRA Risk Management plugin configuration!");
+        log.info("Starting JIRA Risk Management plugin configuration!");
 
         final IssueType riskIssueType;
 
-        IssueConstant risk = constantsManager.getConstantByNameIgnoreCase(ConstantsManager.ISSUE_TYPE_CONSTANT_TYPE, RISK_ISSUE_TYPE);
+        IssueConstant risk = constantsManager.getConstantByNameIgnoreCase(ConstantsManager.CONSTANT_TYPE.ISSUE_TYPE.getType(), RISK_ISSUE_TYPE);
 
         if(risk != null) {
-            riskIssueType = constantsManager.getIssueTypeObject(risk.getId());
+            riskIssueType = constantsManager.getIssueType(risk.getId());
         } else {
-            try {
-                riskIssueType = constantsManager.insertIssueType(RISK_ISSUE_TYPE, 0L, null, "Risk in projects", "/images/icons/issuetypes/delete.png");
+            try {//avatar id of red square with 'ekg'
+                riskIssueType = constantsManager.insertIssueType(RISK_ISSUE_TYPE, 0L, null, "Risk in projects", 10306L);
                 issueTypeSchemeManager.addOptionToDefault(riskIssueType.getId());
             } catch (CreateException e) {
-                logger.error("Couldn't create Risk Issue type: " + e.getMessage(), e);
+                log.error("Couldn't create Risk Issue type: " + e.getMessage(), e);
                 throw new PluginException("Couldn't create IssueType, stopping plugin creation",e);
             }
         }
@@ -115,10 +114,10 @@ public class PluginStartupListener implements LifecycleAware  {
             createRiskField(RISK_CONSEQUENCE_TEXT_CF, issueTypes, contexts, defaultScreen);
             createRiskField(RISK_PROBABILITY_TEXT_CF, issueTypes, contexts, defaultScreen);
         } catch (GenericEntityException e) {
-            logger.error("Couldn't create risk Custom fields : " + e.getMessage(), e);
+            log.error("Couldn't create risk Custom fields : " + e.getMessage(), e);
             throw new PluginException("GenericEntityException. Failed plugin startup configuration",e);
         } catch (NullPointerException e) {
-            logger.error("Couldn't create risk Custom fields:" + e.getMessage(), e);
+            log.error("Couldn't create risk Custom fields:" + e.getMessage(), e);
             throw new PluginException("NullPointerException. Failed plugin startup configuration",e);
         }
     }
@@ -137,7 +136,7 @@ public class PluginStartupListener implements LifecycleAware  {
             riskCustomField = customFieldManager.createCustomField(riskField, riskField,
                     customFieldManager.getCustomFieldType(CUSTOMFIELDTYPES_FLOAT),
                     customFieldManager.getCustomFieldSearcher(CUSTOMFIELDTYPES_EXACTNUMBER),
-                    contexts, convertToGenericValue(issueTypes));
+                    contexts, issueTypes);
             if (!defaultScreen.containsField(riskCustomField.getId())) {
                 FieldScreenTab firstTab = defaultScreen.getTab(0);
                 firstTab.addFieldScreenLayoutItem(riskCustomField.getId());
@@ -147,12 +146,4 @@ public class PluginStartupListener implements LifecycleAware  {
             }
         }
     }
-
-    private List<GenericValue> convertToGenericValue(List<IssueType> issueTypes) {
-        final IssueType issueTypeObject = constantsManager.getIssueTypeObject(constantsManager.getConstantByNameIgnoreCase(ConstantsManager.ISSUE_TYPE_CONSTANT_TYPE, RISK_ISSUE_TYPE).getId());
-        List<GenericValue> genericList = new ArrayList<>();
-        genericList.add(constantsManager.getConstantByNameIgnoreCase(ConstantsManager.ISSUE_TYPE_CONSTANT_TYPE, issueTypeObject.getName()).getGenericValue());
-        return genericList;
-    }
-
 }

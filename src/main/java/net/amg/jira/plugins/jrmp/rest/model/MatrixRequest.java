@@ -23,11 +23,12 @@ import com.atlassian.jira.ofbiz.OfBizDelegator;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.sal.api.message.I18nResolver;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.amg.jira.plugins.jrmp.services.model.DateModel;
 import net.amg.jira.plugins.jrmp.services.model.ProjectOrFilter;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,25 +36,26 @@ import java.util.Map;
 /**
  * Created by jonatan on 30.05.15.
  */
+@Slf4j
 public class MatrixRequest {
 
     public static final String BUNDLE_ERROR_EMPTY_FILTER = "risk.management.validation.error.empty_filter";
     public static final String BUNDLE_ERROR_FILTER_IS_INCORRECT = "risk.management.validation.error.filter_is_incorrect";
     public static final String BUNDLE_ERROR_EMPTY_DATE = "risk.management.validation.error.empty_date";
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    @Setter @Getter
     private String filter;
-
+    @Setter @Getter
     private String title;
-
+    @Setter @Getter
     private String date;
-
+    @Setter @Getter
     private String template;
-
+    @Setter @Getter
     private String refreshRate;
-
+    @Setter @Getter
     private ProjectOrFilter projectOrFilter;
-
+    @Setter @Getter
     private DateModel dateModel;
 
     public ErrorCollection doValidation(I18nResolver i18nResolver, JiraAuthenticationContext authenticationContext, SearchService searchService, OfBizDelegator ofBizDelegator) {
@@ -61,110 +63,52 @@ public class MatrixRequest {
 
         if (StringUtils.isBlank(filter)) {
             errorCollection.addError(GadgetFieldEnum.FILTER.toString(), i18nResolver.getText(BUNDLE_ERROR_EMPTY_FILTER));
-            logger.info("Filter cannot be blank.");
+            log.info("Filter cannot be blank.");
         } else {
             projectOrFilter = ProjectOrFilter.createProjectOrFilter(filter,ofBizDelegator);
             if (!projectOrFilter.isValid()) {
                 errorCollection.addError(GadgetFieldEnum.FILTER.toString(), i18nResolver.getText(BUNDLE_ERROR_FILTER_IS_INCORRECT));
-                logger.info("Project of filter field is invalid for given field:" + projectOrFilter);
+                log.info("Project of filter field is invalid for given field:" + projectOrFilter);
             } else {
                 if (projectOrFilter.getQuery() == null) {
                     errorCollection.addError(GadgetFieldEnum.FILTER.toString(), i18nResolver.getText(BUNDLE_ERROR_FILTER_IS_INCORRECT));
-                    logger.info("Cannot get filter for given ProjectOrFilter filed query: " + projectOrFilter.getQuery());
+                    log.info("Cannot get filter for given ProjectOrFilter filed query: " + projectOrFilter.getQuery());
                 } else {
                     MessageSet messageSet = searchService.validateQuery(authenticationContext.getLoggedInUser(), projectOrFilter.getQuery());
                     if (messageSet.hasAnyErrors()) {
-                        logger.warn("Query is invalid. Enable info for search errors list");
-                        if (logger.isInfoEnabled()) {
+                        log.warn("Query is invalid. Enable info for search errors list");
+                        if (log.isInfoEnabled()) {
                             StringBuilder sb = new StringBuilder();
                             sb.append("Search error messages: \n");
                             for (String msg : messageSet.getErrorMessagesInEnglish()) {
                                 sb.append(msg +"\n");
                             }
-                            logger.info(sb.toString());
+                            log.info(sb.toString());
                         }
                         errorCollection.addError(GadgetFieldEnum.FILTER.toString(), i18nResolver.getText(BUNDLE_ERROR_FILTER_IS_INCORRECT));
                     }
                 }
             }
-
-
         }
 
         if (StringUtils.isBlank(date)) {
             errorCollection.addError(GadgetFieldEnum.DATE.toString(), i18nResolver.getText(BUNDLE_ERROR_EMPTY_DATE));
-            logger.info("Date field is blank");
+            log.info("Date field is blank");
         }
 
         try {
             dateModel = DateModel.valueOf(date);
         } catch (NullPointerException e) {
             errorCollection.addError(GadgetFieldEnum.DATE.toString(), i18nResolver.getText("risk.management.validation.error.wrong_date"));
-            logger.info("Invalid date field: " + date);
+            log.info("Invalid date field: " + date);
         }
 
         if (StringUtils.isBlank(refreshRate)) {
             errorCollection.addError(GadgetFieldEnum.REFRESH.toString(), i18nResolver.getText("risk.management.validation.error.empty_refresh"));
-            logger.info("refresh rate field is blank");
+            log.info("refresh rate field is blank");
         }
 
         return errorCollection;
-    }
-
-    public ProjectOrFilter getProjectOrFilter() {
-        return projectOrFilter;
-    }
-
-    public void setProjectOrFilter(ProjectOrFilter projectOrFilter) {
-        this.projectOrFilter = projectOrFilter;
-    }
-
-    public String getFilter() {
-        return filter;
-    }
-
-    public void setFilter(String filter) {
-        this.filter = filter;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public String getTemplate() {
-        return template;
-    }
-
-    public void setTemplate(String template) {
-        this.template = template;
-    }
-
-    public String getRefreshRate() {
-        return refreshRate;
-    }
-
-    public void setRefreshRate(String refreshRate) {
-        this.refreshRate = refreshRate;
-    }
-
-    public DateModel getDateModel() {
-        return dateModel;
-    }
-
-    public void setDateModel(DateModel dateModel) {
-        this.dateModel = dateModel;
     }
 
     public Map<String,String> getParameters()

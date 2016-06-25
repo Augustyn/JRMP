@@ -25,14 +25,13 @@ import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.query.Query;
+import lombok.extern.slf4j.Slf4j;
 import net.amg.jira.plugins.jrmp.listeners.PluginStartupListener;
 import net.amg.jira.plugins.jrmp.services.model.DateModel;
 import net.amg.jira.plugins.jrmp.services.model.RiskIssues;
 import net.amg.jira.plugins.jrmp.velocity.Cell;
 import net.amg.jira.plugins.jrmp.velocity.Row;
 import net.amg.jira.plugins.jrmp.velocity.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,10 +42,8 @@ import java.util.List;
  * @author Adam Król
  */
 @Service
+@Slf4j
 public class RiskIssuesFinder {
-
-    private Logger logger = LoggerFactory.getLogger(getClass());
-
     @Autowired
     private ApplicationProperties jiraProps;
     @Autowired
@@ -79,7 +76,9 @@ public class RiskIssuesFinder {
         Issue lastUpdatedIssue;
         lastUpdatedIssue = issues.get(0);
 
-        int redTasks=0, greenTasks=0, yellowTasks=0;
+        int redTasks = 0;
+        int greenTasks = 0;
+        int yellowTasks = 0;
         for (Issue issue : issues) {
 
             if (issue.getUpdated().getTime() > lastUpdatedIssue.getUpdated().getTime()){
@@ -88,24 +87,22 @@ public class RiskIssuesFinder {
             int probability;
             try {
                 probability =  Integer.valueOf(issue.getCustomFieldValue(probabilityField).toString());
-                if(probability > RiskIssues.MATRIX_SIZE)
-                {
+                if (probability > RiskIssues.MATRIX_SIZE) {
                     probability = RiskIssues.MATRIX_SIZE;
                 }
             } catch (Exception e){
                 probability = 1;
-                logger.info("There was a problem with obtaining probability. Setting Probability to 1. Error : " + e.getMessage(),e);
+                log.info("There was a problem with obtaining probability. Setting Probability to 1. Error : " + e.getMessage(),e);
             }
             int consequence;
             try {
                 consequence = Integer.valueOf(issue.getCustomFieldValue(consequenceField).toString());
-                if(consequence > RiskIssues.MATRIX_SIZE)
-                {
+                if(consequence > RiskIssues.MATRIX_SIZE) {
                     consequence = RiskIssues.MATRIX_SIZE;
                 }
             } catch (Exception e){
                 consequence = 1;
-                logger.info("There was a problem with obtaining consequence. Setting Consequence to 1. Error : " + e.getMessage(),e);
+                log.info("There was a problem with obtaining consequence. Setting Consequence to 1. Error : " + e.getMessage(),e);
             }
 
             Task task = new Task(issue.getKey(),
@@ -126,7 +123,6 @@ public class RiskIssuesFinder {
                     break;
             }
 
-
             tasks.add(task);
         }
         riskIssues.setGreenTasks(greenTasks);
@@ -137,7 +133,7 @@ public class RiskIssuesFinder {
     }
 
     private List<Row> fillRowsContent(Query query, DateModel dateModel, String baseUrl) {
-        List<Row> result = new ArrayList<Row>();
+        List<Row> result = new ArrayList<>();
         for(int i = 0; i < RiskIssues.MATRIX_SIZE; i++){
             Row row = new Row();
             for(int j = 0; j< RiskIssues.MATRIX_SIZE; j++){

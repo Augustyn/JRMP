@@ -19,6 +19,7 @@
 package net.amg.jira.plugins.jrmp.rest.model;
 
 import com.atlassian.jira.rest.api.util.ValidationError;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,40 +29,11 @@ import java.util.Map;
 /**
  * @author Adam Król
  */
+@Data
 public class ErrorCollection {
-    private Collection<String> errorMessages;
-    private Collection<ValidationError> errors;
-    private Map<String,String> parameters;
-
-    public ErrorCollection() {
-        errorMessages = new ArrayList<String>(1);
-        errors = new ArrayList<ValidationError>(7);
-        parameters = new HashMap<String, String>(4);
-    }
-
-    public Collection<String> getErrorMessages() {
-        return errorMessages;
-    }
-
-    public void setErrorMessages(Collection<String> errorMessages) {
-        this.errorMessages = errorMessages;
-    }
-
-    public Collection<ValidationError> getErrors() {
-        return errors;
-    }
-
-    public void setErrors(Collection<ValidationError> errors) {
-        this.errors = errors;
-    }
-
-    public Map<String, String> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(Map<String, String> parameters) {
-        this.parameters = parameters;
-    }
+    private Collection<String> errorMessages = new ArrayList<>(1);
+    private Collection<ValidationError> errors = new ArrayList<>(7);
+    private Map<String,String> parameters = new HashMap<>(4);
 
     public void addError(String field, String errorMsg) {
         errors.add(new ValidationError(field, errorMsg));

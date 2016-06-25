@@ -22,6 +22,7 @@ import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
 import com.atlassian.jira.ofbiz.OfBizDelegator;
 import com.atlassian.query.Query;
+import lombok.Data;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,7 @@ import java.util.Map;
  * Created by jonatan on 31.05.15.
  */
 @Service
+@Data
 public class ProjectOrFilter {
     public static final String PROJECT = "project";
     public static final String FILTER = "filter";
@@ -46,10 +48,8 @@ public class ProjectOrFilter {
 
     private boolean valid = false;
 
-    private ProjectOrFilter() {
-
+    private ProjectOrFilter() {//Empty, 4Spring
     }
-
 
     public static ProjectOrFilter createProjectOrFilter(String projectOrFilter, OfBizDelegator ofBizDelegator) {
         ProjectOrFilter projectOrFilterObject = new ProjectOrFilter();
@@ -103,40 +103,4 @@ public class ProjectOrFilter {
         return subjectBuilder.buildQuery();
     }
 
-    public Query getQuery() {
-        return query;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public boolean isProject() {
-        return isProject;
-    }
-
-    public boolean isFilter() {
-        return isFilter;
-    }
-
-    public boolean isValid() {
-        return valid;
-    }
-
-    @Override
-    public String toString() {
-        return "ProjectOrFilter{" +
-                "query=" + query +
-                ", name='" + name + '\'' +
-                ", id='" + id + '\'' +
-                ", isFilter=" + isFilter +
-                ", isProject=" + isProject +
-                ", valid=" + valid +
-                ", projectOrFilter='" + projectOrFilter + '\'' +
-                '}';
-    }
 }

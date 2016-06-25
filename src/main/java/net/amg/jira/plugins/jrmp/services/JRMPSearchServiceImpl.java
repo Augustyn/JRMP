@@ -36,7 +36,6 @@
 package net.amg.jira.plugins.jrmp.services;
 
 import com.atlassian.jira.bc.issue.search.SearchService;
-import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
@@ -79,7 +78,7 @@ public class JRMPSearchServiceImpl implements JRMPSearchService {
 
         SearchResults searchResults;
         try {
-            searchResults =  searchService.search(authenticationContext.getUser().getDirectoryUser(), query, PagerFilter.getUnlimitedFilter());
+            searchResults =  searchService.search(authenticationContext.getLoggedInUser(), query, PagerFilter.getUnlimitedFilter());
         } catch (SearchException e) {
             logger.info("getMatrixSize Error, searchResult are null : " + e.getMessage(),e);
             return Collections.emptyList();

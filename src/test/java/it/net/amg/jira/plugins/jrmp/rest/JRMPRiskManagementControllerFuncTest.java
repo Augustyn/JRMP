@@ -1,9 +1,6 @@
 package it.net.amg.jira.plugins.jrmp.rest;
 
 import net.amg.jira.plugins.jrmp.rest.model.MatrixRequest;
-import org.apache.wink.client.ClientResponse;
-import org.apache.wink.client.Resource;
-import org.apache.wink.client.RestClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

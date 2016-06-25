@@ -24,6 +24,7 @@
         <vendor name="${project.organization.name}" url="${project.organization.url}"/>
         <param name="plugin-icon">images/JRMPPluginIcon.png</param>
         <param name="plugin-logo">images/JRMPPluginLogo.png</param>
+        <java-version>1.8</java-version>
     </plugin-info>
     <!-- Add resources: -->
     <resource type="download" name="screenshot.png" location="images/jrmpPreview.png"/>

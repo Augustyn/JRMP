@@ -18,14 +18,16 @@
  */
 package net.amg.jira.plugins.jrmp.velocity;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
+@Slf4j
 public class Cell {
 	private List<Task> tasks;
 	private Colour colour;
@@ -33,9 +35,7 @@ public class Cell {
 	private String baseUrl;
 	private String jql;
 
-	private Logger logger = LoggerFactory.getLogger(getClass());
-
-	public Cell(double probability, double consequence, double matrixSize, String baseUrl, String jql){
+    public Cell(double probability, double consequence, double matrixSize, String baseUrl, String jql){
 		this.tasks = new ArrayList<Task>();
 		this.baseUrl = baseUrl;
 		this.jql = jql;
@@ -49,45 +49,29 @@ public class Cell {
 			colour = Colour.GREEN;
 		}
 	}
-	
-	public List<Task> getTasks() {
-		return tasks;
-	}
-	
+
 	public void addTask(Task task){
 		tasks.add(task);
 		if (tasks.size()>2) {
 			overload++;
 		}
 	}
-	
-	public String getRisk(){
-		return colour.toString();
-	}
-	
-	public Colour getRiskEnum(){
-		return colour;
-	}
-
-	public int getOverload() {
-		return overload;
-	}
-
-	public void setOverload(int overload) {
-		this.overload = overload;
-	}
+    public String getRisk(){
+        return colour.toString();
+    }
 
 	public String getJqlQuery() {
 		try {
 			jql = URLEncoder.encode(jql, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			logger.error("Couldn't create UTF-8 String from jql: " + jql + " with message: " + e.getMessage(), e);
+			log.error("Couldn't create UTF-8 String from jql: " + jql + " with message: " + e.getMessage(), e);
 			jql = jql.replaceAll("\\u007b","").replaceAll("\\u007d","").replaceAll(" ","%20")
 					.replaceAll("=", "%3D").replaceAll("\"",""); // Głupie ale może pomoże jak coś pójdzie nie tak
 		}
 
-		String jqlQuery = baseUrl + "/issues/?jql=" + jql;
-		return jqlQuery;
+		return baseUrl + "/issues/?jql=" + jql;
 	}
-
+    public Colour getRiskEnum(){
+        return getColour();
+    }
 }

@@ -18,29 +18,19 @@
  */
 package net.amg.jira.plugins.jrmp.services;
 
-import com.atlassian.jira.bc.issue.search.SearchService;
-import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.util.collect.MapBuilder;
-import com.atlassian.plugin.webresource.WebResourceUrlProvider;
-import com.atlassian.sal.api.message.I18nResolver;
-import com.atlassian.velocity.DefaultVelocityManager;
-import com.atlassian.velocity.VelocityManager;
+import lombok.extern.slf4j.Slf4j;
 import net.amg.jira.plugins.jrmp.services.model.DateModel;
 import net.amg.jira.plugins.jrmp.services.model.ProjectOrFilter;
 import net.amg.jira.plugins.jrmp.services.model.RiskIssues;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class MatrixGeneratorImpl implements MatrixGenerator {
-
-    private Logger logger = LoggerFactory.getLogger(getClass());
-
     @Autowired
     private JRMPSearchService jrmpSearchService;
     @Autowired
@@ -48,28 +38,18 @@ public class MatrixGeneratorImpl implements MatrixGenerator {
     @Autowired
     private RiskIssuesFinder riskIssuesFinder;
 
+    public MatrixGeneratorImpl() {}//Empty constructor 4spring.
+
     @Override
     public String generateMatrix(ProjectOrFilter projectOrFilter, String matrixTitle, String matrixTemplate, DateModel dateModel) {
-
-        logger.info("generateMatrix: Method start");
-
+        long start = System.currentTimeMillis();
+        log.info("generateMatrix: Method start");
         List<Issue> issues = jrmpSearchService.getAllQualifiedIssues(projectOrFilter.getQuery(), dateModel);
-
-        logger.info("Found {} issues", issues.size());
+        log.info("Found {} issues, in {}ms", issues.size(), (System.currentTimeMillis() - start));
         RiskIssues riskIssues = riskIssuesFinder.fillAllFields(issues, projectOrFilter.getQuery(), dateModel);
-
-        return renderTemplate.renderTemplate(projectOrFilter, matrixTitle, matrixTemplate, riskIssues);
+        final String template = renderTemplate.renderTemplate(projectOrFilter, matrixTitle, matrixTemplate, riskIssues);
+        log.debug("Returning template string in: {}ms", (System.currentTimeMillis() - start));
+        return template;
     }
 
-    public void setJrmpSearchService(JRMPSearchService jrmpSearchService) {
-        this.jrmpSearchService = jrmpSearchService;
-    }
-
-    public void setRenderTemplate(RenderTemplateService renderTemplate) {
-        this.renderTemplate = renderTemplate;
-    }
-
-    public void setRiskIssuesFinder(RiskIssuesFinder riskIssuesFinder) {
-        this.riskIssuesFinder = riskIssuesFinder;
-    }
 }

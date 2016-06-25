@@ -21,7 +21,6 @@ package ut.net.amg.jira.plugins.jrmp.services;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.junit.rules.AvailableInContainer;
 import com.atlassian.jira.junit.rules.MockComponentContainer;
-import com.atlassian.jira.mock.component.MockComponentWorker;
 import com.atlassian.plugin.webresource.WebResourceUrlProvider;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.velocity.VelocityManager;

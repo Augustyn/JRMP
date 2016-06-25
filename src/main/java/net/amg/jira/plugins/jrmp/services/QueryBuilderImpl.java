@@ -21,7 +21,6 @@ package net.amg.jira.plugins.jrmp.services;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
 import com.atlassian.query.Query;
-import com.atlassian.query.clause.Clause;
 import net.amg.jira.plugins.jrmp.listeners.PluginStartupListener;
 import net.amg.jira.plugins.jrmp.services.model.DateModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,13 +43,13 @@ public class QueryBuilderImpl implements QueryBuilder {
     @Autowired
     private CustomFieldManager customFieldManager;
 
-    QueryBuilderImpl(){}
+    public QueryBuilderImpl(){
+        //Empty 4Spring
+    }
 
     @Override
     public Query buildQuery(Query query,DateModel dateModel) {
         JqlQueryBuilder builder = getJqlQueryBuilder(query);
-
-
         builder.where().and().issueType(PluginStartupListener.RISK_ISSUE_TYPE).and()
                 .sub().customField(customFieldManager.getCustomFieldObjectByName(PluginStartupListener.RISK_CONSEQUENCE_TEXT_CF).getIdAsLong()).isNotEmpty()
                 .or().customField(customFieldManager.getCustomFieldObjectByName(PluginStartupListener.RISK_PROBABILITY_TEXT_CF).getIdAsLong()).isNotEmpty().endsub();
@@ -64,11 +63,8 @@ public class QueryBuilderImpl implements QueryBuilder {
 
     private JqlQueryBuilder getJqlQueryBuilder(Query query) {
 
-        for (Clause clause : query.getWhereClause().getClauses()) {
-            if (QUERY_CLAUSES.contains(clause.getName())) {
-                query.getWhereClause().getClauses().remove(clause);
-            }
-        }
+        query.getWhereClause().getClauses().stream().filter(clause -> QUERY_CLAUSES.contains(clause.getName()))
+                .forEach(clause -> query.getWhereClause().getClauses().remove(clause));
 
         return JqlQueryBuilder.newBuilder(query);
     }
@@ -83,14 +79,9 @@ public class QueryBuilderImpl implements QueryBuilder {
                 .and().customField(customFieldManager.getCustomFieldObjectByName(PluginStartupListener.RISK_CONSEQUENCE_TEXT_CF).getIdAsLong()).eq((long) riskConsequence)
                 .and().customField(customFieldManager.getCustomFieldObjectByName(PluginStartupListener.RISK_PROBABILITY_TEXT_CF).getIdAsLong()).eq((long) riskProbability);
 
-        if(!dateModel.equals(DateModel.TODAY))
-        {
+        if(!dateModel.equals(DateModel.TODAY)) {
             builder.where().and().created().ltEq(dateModel.getBeforeValue());
         }
         return builder.buildQuery();
-    }
-
-    public void setCustomFieldManager(CustomFieldManager customFieldManager) {
-        this.customFieldManager = customFieldManager;
     }
 }

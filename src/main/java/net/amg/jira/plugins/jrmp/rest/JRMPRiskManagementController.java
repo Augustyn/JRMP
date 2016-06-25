@@ -20,16 +20,14 @@ package net.amg.jira.plugins.jrmp.rest;
 
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.ofbiz.OfBizDelegator;
-import com.atlassian.jira.rest.api.util.ValidationError;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.gson.Gson;
-import net.amg.jira.plugins.jrmp.rest.model.GadgetFieldNames;
+import lombok.extern.slf4j.Slf4j;
 import net.amg.jira.plugins.jrmp.rest.model.ErrorCollection;
+import net.amg.jira.plugins.jrmp.rest.model.GadgetFieldNames;
 import net.amg.jira.plugins.jrmp.rest.model.MatrixRequest;
 import net.amg.jira.plugins.jrmp.services.MatrixGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -44,9 +42,8 @@ import javax.ws.rs.core.Response;
  */
 @Path("/controller")
 @Controller
+@Slf4j
 public class JRMPRiskManagementController {
-
-    private Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired
     private I18nResolver i18nResolver;
     @Autowired
@@ -68,7 +65,7 @@ public class JRMPRiskManagementController {
                                  @QueryParam(GadgetFieldNames.REFRESH) String refresh, @QueryParam(GadgetFieldNames.TEMPLATE) String template,
                                  @QueryParam(GadgetFieldNames.TITLE) String title) {
 
-        logger.info("Validation: Method start");
+        log.info("Validation: Method start");
 
         MatrixRequest matrixRequest = new MatrixRequest();
         matrixRequest.setFilter(filter);
@@ -83,10 +80,10 @@ public class JRMPRiskManagementController {
         errorCollection.setParameters(matrixRequest.getParameters());
 
         if(errorCollection.hasAnyErrors()) {
-            logger.warn("Validation: Wrong parameters passed to Validator. Returning BAD_REQUEST");
+            log.warn("Validation: Wrong parameters passed to Validator. Returning BAD_REQUEST");
             return Response.status(Response.Status.BAD_REQUEST).entity(gson.toJson(errorCollection)).build();
         }
-        logger.info("Validation: Everything Went okay, returning OK.");
+        log.info("Validation: Everything Went okay, returning OK.");
         return Response.ok().build();
     }
 
@@ -95,7 +92,7 @@ public class JRMPRiskManagementController {
     @Produces({MediaType.TEXT_HTML, MediaType.TEXT_XML})
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML, MediaType.TEXT_XML, MediaType.APPLICATION_FORM_URLENCODED})
     public Response postMatrix(MatrixRequest matrixRequest) {
-        logger.debug("postMatrix: Method start, mode: POST");
+        log.debug("postMatrix: Method start, mode: POST");
         return processMatrix(matrixRequest);
     }
 
@@ -112,14 +109,14 @@ public class JRMPRiskManagementController {
         matrixRequest.setTitle(title);
         matrixRequest.setRefreshRate(refresh);
         matrixRequest.setTemplate(template);
-        logger.debug("getMatrix: Method start mode: GET");
+        log.debug("getMatrix: Method start mode: GET");
         return processMatrix(matrixRequest);
     }
 
     private Response processMatrix(MatrixRequest matrixRequest) {
         ErrorCollection errorCollection = matrixRequest.doValidation(i18nResolver,authenticationContext,searchService,ofBizDelegator);
         if (errorCollection.hasAnyErrors()) {
-            logger.warn("getMatrix: Wrong parameters passed in matrixRequest. Returning BAD_REQUEST. Errors: "
+            log.warn("getMatrix: Wrong parameters passed in matrixRequest. Returning BAD_REQUEST. Errors: "
                     + errorCollection.getErrors().toString());
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
@@ -130,7 +127,7 @@ public class JRMPRiskManagementController {
                     matrixRequest.getDateModel()),
                     MediaType.TEXT_HTML).build();
         } catch(Exception e){
-            logger.error("processMatrix: The Matrix couldn't be generated because of: " + e.getMessage(),e);
+            log.error("processMatrix: The Matrix couldn't be generated because of: " + e.getMessage(),e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }

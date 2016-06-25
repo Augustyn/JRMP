@@ -30,8 +30,6 @@ public enum GadgetFieldEnum {
         this.fieldName = fieldName;
     }
 
-
-
     @Override
     public String toString() {
         return fieldName;
